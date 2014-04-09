@@ -42,6 +42,7 @@ void ofxControlease::update()
     {
         oscReceiver.getNextMessage(&msg);
         
+        
         if (msg.getAddress() == "/ic") {
             // update variable
             int index = msg.getArgAsInt32(0);
@@ -51,6 +52,9 @@ void ofxControlease::update()
             }
             
             *((float*)inputs[index]->val) = val;
+        }
+        else if (msg.getAddress() == "/hello") {
+            handleHelloMessage(msg);
         }
         else if (msg.getAddress() == "/alive?") {
             handleAliveMessage(msg);
@@ -84,14 +88,17 @@ void ofxControlease::threadedFunction()
     }
 }
 
-void ofxControlease::handleAliveMessage(ofxOscMessage &msg)
+void ofxControlease::handleHelloMessage(ofxOscMessage &msg)
 {
-    std::string host = msg.getArgAsString(0);
-    int remotePort = msg.getArgAsInt32(1);
-
+    std::string host = msg.getRemoteIp();//msg.getArgAsString(0);
+    int remotePort = msg.getArgAsInt32(0);
+    
     // setup oscSender
     oscSender.setup(host, remotePort);
+}
 
+void ofxControlease::handleAliveMessage(ofxOscMessage &msg)
+{
     // send alive! message
     ofxOscMessage aliveMsg;
     aliveMsg.setAddress("/alive!");

@@ -37,6 +37,7 @@ public:
     
 
 private:
+    void handleHelloMessage(ofxOscMessage &msg);
     void handleAliveMessage(ofxOscMessage &msg);
     void threadedFunction();
     
