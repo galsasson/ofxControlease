@@ -60,7 +60,22 @@ void ofxControlease::update()
             handleAliveMessage(msg);
         }
     }
+    
+    // update output values
+    for (int i=0; i<outputs.size(); i++)
+    {
+        ofxControleaseOutput *out = outputs[i];
+        if (out->hasChanged()) {
+            ofxOscMessage oMsg;
+            oMsg.setAddress("/oc");
+            oMsg.addIntArg(i);
+            oMsg.addFloatArg(*(float*)out->val);
+            oscSender.sendMessage(oMsg);
+            out->lastValSent = *(float*)out->val;
+        }
+    }
 }
+
 
 void ofxControlease::addInput(std::string name, float *val)
 {
@@ -68,7 +83,7 @@ void ofxControlease::addInput(std::string name, float *val)
         return;
     }
     
-    inputs.push_back(new ofxControleaseInput(ofxControlease::FLOAT, name, (void*)val));
+    inputs.push_back(new ofxControleaseInput(name, val));
 }
 
 void ofxControlease::addInput(std::string name, int *val)
@@ -77,14 +92,51 @@ void ofxControlease::addInput(std::string name, int *val)
         return;
     }
     
-    inputs.push_back(new ofxControleaseInput(ofxControlease::INT, name, (void*)val));
+    inputs.push_back(new ofxControleaseInput(name, val));
 }
+
+void ofxControlease::addInput(std::string name, bool *val)
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    inputs.push_back(new ofxControleaseInput(name, val));    
+}
+
+void ofxControlease::addOutput(std::string name, float *val)
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    outputs.push_back(new ofxControleaseOutput(name, val));
+}
+
+void ofxControlease::addOutput(std::string name, int *val)
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    outputs.push_back(new ofxControleaseOutput(name, val));
+}
+
+void ofxControlease::addOutput(std::string name, bool *val)
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    outputs.push_back(new ofxControleaseOutput(name, val));
+}
+
 
 void ofxControlease::threadedFunction()
 {
     while (bRun) {
         update();
-//        usleep(10);
+        usleep(10000);
     }
 }
 
@@ -117,6 +169,18 @@ void ofxControlease::handleAliveMessage(ofxOscMessage &msg)
         iMsg.addIntArg((int)input->type);
         iMsg.addFloatArg(*(float*)input->val);
         oscSender.sendMessage(iMsg);
+    }
+    
+    for (int i=0; i<outputs.size(); i++)
+    {
+        ofxControleaseOutput *output = outputs[i];
+        ofxOscMessage oMsg;
+        oMsg.setAddress("/output_node");
+        oMsg.addStringArg(output->name);
+        oMsg.addIntArg(i);
+        oMsg.addIntArg((int)output->type);
+        oMsg.addFloatArg(*(float*)output->val);
+        oscSender.sendMessage(oMsg);
     }
     
     ofxOscMessage endMsg;

@@ -6,14 +6,16 @@
 //
 //
 
-#ifndef __drawingApp__ofxControlease__
-#define __drawingApp__ofxControlease__
+#ifndef __ofxControlease__
+#define __ofxControlease__
 
 #include <iostream>
 #include "ofMain.h"
 #include "ofxOsc.h"
 
-class ofxControleaseInput;
+#include "ControleaseType.h"
+#include "ofxControleaseInput.h"
+#include "ofxControleaseOutput.h"
 
 class ofxControlease : public ofThread
 {
@@ -26,14 +28,11 @@ public:
     
     void addInput(std::string name, float* val);
     void addInput(std::string name, int* val);
+    void addInput(std::string name, bool* val);
     
-
-    typedef enum ControleaseType_t {
-        FLOAT = 0,
-        INT = 1,
-        BOOL = 2
-    } Type;
-    
+    void addOutput(std::string name, float* val);
+    void addOutput(std::string name, int* val);
+    void addOutput(std::string name, bool* val);
     
 
 private:
@@ -46,22 +45,11 @@ private:
     
     std::string programName;
     vector<ofxControleaseInput*> inputs;
+    vector<ofxControleaseOutput*> outputs;
     ofxOscReceiver oscReceiver;
     ofxOscSender oscSender;
 
 };
 
 
-class ofxControleaseInput
-{
-public:
-    
-    ofxControlease::Type type;
-    std::string name;
-    void *val;
-    
-    ofxControleaseInput(ofxControlease::Type t, std::string n, void *v) { type = t; name = n; val = v; }
-};
-
-
-#endif /* defined(__drawingApp__Controlease__) */
+#endif /* defined(__ofxControlease__) */
