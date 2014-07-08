@@ -11,12 +11,16 @@
 ofxControlease::ofxControlease()
 {
     bSetup = false;
+    bOscSenderInitialized = false;
+    bRun = false;
 }
 
 ofxControlease::~ofxControlease()
 {
     bRun = false;
+    cout<< "Waiting for ControlEase... ";
     waitForThread();
+    cout<<"done"<<endl;
 }
 
 void ofxControlease::setup(std::string name, int listenPort)
@@ -51,7 +55,29 @@ void ofxControlease::update()
                 return;
             }
             
-            *((float*)inputs[index]->val) = val;
+            ofxControleaseInput* input = inputs[index];
+            if (input->val != NULL) {
+				if (input->type == ControleaseType::FLOAT) {
+                	*((float*)input->val) = val;
+				}
+				else if (input->type == ControleaseType::UCHAR) {
+                	*((unsigned char*)input->val) = (unsigned char)val;
+				}
+            }
+            if (input->eventFunc != NULL) {
+                input->eventFunc(val);
+            }
+        }
+        else if (msg.getAddress() == "/all") {
+            if (msg.getNumArgs() != inputs.size()) {
+                cout << "warning: got "<<msg.getNumArgs()<<" args, we have "<<inputs.size()<<" inputs"<<endl;
+                continue;
+            }
+            
+            for (int i=0; i<inputs.size(); i++)
+            {
+                *((float*)inputs[i]->val) = msg.getArgAsFloat(i);
+            }
         }
         else if (msg.getAddress() == "/hello") {
             handleHelloMessage(msg);
@@ -60,20 +86,26 @@ void ofxControlease::update()
             handleAliveMessage(msg);
         }
     }
-    
+}
+
+void ofxControlease::sendOutputs()
+{
     // update output values
-    for (int i=0; i<outputs.size(); i++)
+    if (bOscSenderInitialized)
     {
-        ofxControleaseOutput *out = outputs[i];
-        if (out->hasChanged()) {
+        for (int i=0; i<outputs.size(); i++)
+        {
+            ofxControleaseOutput *out = outputs[i];
+            //            if (out->hasChanged()) {
             ofxOscMessage oMsg;
             oMsg.setAddress("/oc");
             oMsg.addIntArg(i);
-            oMsg.addFloatArg(*(float*)out->val);
+            oMsg.addFloatArg(*((float*)out->val));
             oscSender.sendMessage(oMsg);
-            out->lastValSent = *(float*)out->val;
+            //                out->lastValSent = *(float*)out->val;
+            //            }
         }
-    }
+    }    
 }
 
 
@@ -102,6 +134,81 @@ void ofxControlease::addInput(std::string name, bool *val)
     }
     
     inputs.push_back(new ofxControleaseInput(name, val));    
+}
+
+void ofxControlease::addInput(std::string name, unsigned char *val)
+{
+	if (!bSetup) {
+		return;
+	}
+	
+	inputs.push_back(new ofxControleaseInput(name, val));
+}
+
+void ofxControlease::addInput(std::string name, ofVec2f *val)
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    stringstream namex;
+    namex << name << ".x";
+    stringstream namey;
+    namey << name << ".y";
+    
+    inputs.push_back(new ofxControleaseInput(namex.str(), &val->x));
+    inputs.push_back(new ofxControleaseInput(namey.str(), &val->y));
+}
+
+void ofxControlease::addInput(std::string name, ofFloatColor *color)
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    stringstream namer;
+    namer << name << ".r";
+    stringstream nameg;
+    nameg << name << ".g";
+    stringstream nameb;
+    nameb << name << ".b";
+    stringstream namea;
+    namea << name << ".a";
+    
+    inputs.push_back(new ofxControleaseInput(namer.str(), &color->r));
+    inputs.push_back(new ofxControleaseInput(nameg.str(), &color->g));
+    inputs.push_back(new ofxControleaseInput(nameb.str(), &color->b));
+    inputs.push_back(new ofxControleaseInput(namea.str(), &color->a));
+}
+
+void ofxControlease::addInput(std::string name, ofColor *color)
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    stringstream namer;
+    namer << name << ".r";
+    stringstream nameg;
+    nameg << name << ".g";
+    stringstream nameb;
+    nameb << name << ".b";
+    stringstream namea;
+    namea << name << ".a";
+    
+    inputs.push_back(new ofxControleaseInput(namer.str(), &color->r));
+    inputs.push_back(new ofxControleaseInput(nameg.str(), &color->g));
+    inputs.push_back(new ofxControleaseInput(nameb.str(), &color->b));
+    inputs.push_back(new ofxControleaseInput(namea.str(), &color->a));
+}
+
+void ofxControlease::addInputEvent(std::string name, void (*event)(float))
+{
+    if (!bSetup) {
+        return;
+    }
+    
+    inputs.push_back(new ofxControleaseInput(name, event));
 }
 
 void ofxControlease::addOutput(std::string name, float *val)
@@ -147,6 +254,8 @@ void ofxControlease::handleHelloMessage(ofxOscMessage &msg)
     
     // setup oscSender
     oscSender.setup(host, remotePort);
+    bOscSenderInitialized = true;
+    
 }
 
 void ofxControlease::handleAliveMessage(ofxOscMessage &msg)
@@ -167,7 +276,15 @@ void ofxControlease::handleAliveMessage(ofxOscMessage &msg)
         iMsg.addStringArg("/ic");
         iMsg.addIntArg(i);
         iMsg.addIntArg((int)input->type);
-        iMsg.addFloatArg(*(float*)input->val);
+		if (input->type == ControleaseType::INT) {
+			iMsg.addFloatArg(*(int*)input->val);
+		}
+		else if (input->type == ControleaseType::UCHAR) {
+			iMsg.addFloatArg(*(unsigned char*)input->val);
+		}
+		else {
+			iMsg.addFloatArg(*(float*)input->val);
+		}
         oscSender.sendMessage(iMsg);
     }
     

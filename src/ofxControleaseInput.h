@@ -19,10 +19,13 @@ public:
     ControleaseType::Type type;
     std::string name;
     void *val;
+    void (*eventFunc)(float);
     
     ofxControleaseInput(std::string n, float *v);
     ofxControleaseInput(std::string n, int *v);
     ofxControleaseInput(std::string n, bool *v);
+    ofxControleaseInput(std::string n, unsigned char *v);
+    ofxControleaseInput(std::string n, void (*func)(float));
 };
 
 

@@ -10,6 +10,7 @@
 #define __ofxControlease__
 
 #include <iostream>
+#include <sstream>
 #include "ofMain.h"
 #include "ofxOsc.h"
 
@@ -29,11 +30,17 @@ public:
     void addInput(std::string name, float* val);
     void addInput(std::string name, int* val);
     void addInput(std::string name, bool* val);
+	void addInput(std::string name, unsigned char *val);
+    void addInput(std::string name, ofVec2f* val);
+    void addInput(std::string name, ofFloatColor* color);
+    void addInput(std::string name, ofColor* color);
+    void addInputEvent(std::string name, void (*event)(float));
     
     void addOutput(std::string name, float* val);
     void addOutput(std::string name, int* val);
     void addOutput(std::string name, bool* val);
     
+    void sendOutputs();
 
 private:
     void handleHelloMessage(ofxOscMessage &msg);
@@ -42,6 +49,7 @@ private:
     
     bool bSetup;
     bool bRun;
+    bool bOscSenderInitialized;
     
     std::string programName;
     vector<ofxControleaseInput*> inputs;

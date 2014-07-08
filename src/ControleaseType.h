@@ -15,7 +15,8 @@ public:
     typedef enum {
         FLOAT = 0,
         INT = 1,
-        BOOL = 2
+        BOOL = 2,
+		UCHAR = 3,
     } Type;
 };
 
