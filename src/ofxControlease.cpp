@@ -60,8 +60,14 @@ void ofxControlease::update()
 				if (input->type == ControleaseType::FLOAT) {
                 	*((float*)input->val) = val;
 				}
+				else if (input->type == ControleaseType::INT) {
+					*((int*)input->val) = (int)val;
+				}
 				else if (input->type == ControleaseType::UCHAR) {
                 	*((unsigned char*)input->val) = (unsigned char)val;
+				}
+				else if (input->type == ControleaseType::BOOL) {
+					*((bool*)input->val) = (bool)!!val;
 				}
             }
             if (input->eventFunc != NULL) {
@@ -281,6 +287,9 @@ void ofxControlease::handleAliveMessage(ofxOscMessage &msg)
 		}
 		else if (input->type == ControleaseType::UCHAR) {
 			iMsg.addFloatArg(*(unsigned char*)input->val);
+		}
+		else if (input->type == ControleaseType::BOOL) {
+			iMsg.addFloatArg(*(bool*)input->val);
 		}
 		else {
 			iMsg.addFloatArg(*(float*)input->val);
