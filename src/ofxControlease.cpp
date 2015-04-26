@@ -45,8 +45,7 @@ void ofxControlease::update()
     while (oscReceiver.hasWaitingMessages())
     {
         oscReceiver.getNextMessage(&msg);
-        
-        
+
         if (msg.getAddress() == "/ic") {
             // update variable
             int index = msg.getArgAsInt32(0);
@@ -266,6 +265,11 @@ void ofxControlease::handleHelloMessage(ofxOscMessage &msg)
 
 void ofxControlease::handleAliveMessage(ofxOscMessage &msg)
 {
+	if (!bOscSenderInitialized) {
+		ofLogError("ofxControlease", "oscSender not initialized");
+		return;
+	}
+
     // send alive! message
     ofxOscMessage aliveMsg;
     aliveMsg.setAddress("/alive!");
