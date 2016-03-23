@@ -248,7 +248,7 @@ void ofxControlease::threadedFunction()
 {
     while (bRun) {
         update();
-        usleep(10000);
+        ofSleepMillis(10);
     }
 }
 
